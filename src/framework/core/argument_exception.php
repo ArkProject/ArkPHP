@@ -1,11 +1,14 @@
 <?php
-
+namespace ark;
+if (! defined ( 'ARK' )) {
+	exit ( 'deny access' );
+}
 /**
  * 
  * @author jun
  *
  */
-class ArgumentException extends Exception{
+class ArgumentException extends \Exception{
 	
 	public function __construct($paramName=NULL,$message=NULL,$innerException=NULL){
 		if(!$message){
@@ -17,15 +20,4 @@ class ArgumentException extends Exception{
 		parent::__construct($message, NULL, $innerException);
 	}
 }
-
-class FileSystemException extends Exception{
-
-	public function __construct($message=NULL,$innerException=NULL){
-		if(!$message){
-			$message='文件系统异常。';
-		}
-		parent::__construct($message, NULL, $innerException);
-	}
-}
-
 ?>

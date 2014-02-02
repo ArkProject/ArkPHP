@@ -1,43 +1,16 @@
-﻿<?php
+<?php
+namespace ark;
 if (! defined ( 'ARK' )) {
 	exit ( 'deny access' );
-}
-class Set implements Iterator {
-	
-	/**
-	 *
-	 * @var array
-	 */
-	protected $items;
-	public function __construct($items = NULL) {
-		if (! $items) {
-			$this->items = array ();
-		}
-	}
-	public function rewind() {
-		reset ( $this->items );
-	}
-	public function current() {
-		return current ( $this->items );
-	}
-	public function key() {
-		return key ( $this->items );
-	}
-	public function next() {
-		return next ( $this->items );
-	}
-	public function valid() {
-		return ($this->current () !== false);
-	}
 }
 
 /**
  * Represents a web application.
  *
- * @author jun
+ * @author jun你好
  *        
  */
-class Application extends Event {
+class Application {
 	
 	/**
 	 *
@@ -65,7 +38,8 @@ class Application extends Event {
 	 * @param array $settings        	
 	 */
 	public static final function run($settings = NULL, $appName = NULL) {
-		try {
+		
+		
 			
 			if (self::$_instance) {
 				throw new Exception ( 'Application has already started.' );
@@ -85,12 +59,15 @@ class Application extends Event {
 			// ark_strIndexOf();
 			// ark_strLength();
 			// ark_errorHandle();
-			ark_importFile ( 'F:\test\test.txt' );
-		} catch ( Exception $e ) {
-			display_error ( $e );
+			ark_handleFileError();
+			ark_loadFiles ( 'F:\test\test.txt' );
+			ark_unhandleError();
+			//throw new \Exception('ff');
+			try {} catch (\Exception $e ) {
+			_ark_display_error ( $e );
 		}
 		//
-		exit ( 0 );
+		//exit ( 0 );
 	}
 	
 	/**

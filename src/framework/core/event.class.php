@@ -1,7 +1,5 @@
 <?php
-if (! defined ( 'ARK' )) {
-	exit ( 'deny access' );
-}
+namespace ark;
 
 /**
  * 用于支持事件的基类。

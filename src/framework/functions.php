@@ -6,8 +6,7 @@ function ark_version() {
 	return '1.0.1';
 }
 
-
-
+//use ark;
 
 /**
  * gets Application instance.
@@ -17,65 +16,8 @@ function ark_version() {
 function ark_app() {
 	return Application::getInstance ();
 }
-function display_error($e) {
-	$html = '
-<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Server Error</title><style type="text/css">
-body,div,p,ul,li,hr{ margin:0; padding:0; font-size:14px;}
-body{margin:0 5px; line-height:20px;}
-h3{font-size:18px; font-weight:bold; margin-bottom:10px;margin-top:0;}
-hr{margin:5px 0; border:none; border-top:1px solid #efefef;}
-p{padding:5px;}
-div{background:#FF9; padding:5px; margin-bottom:20px;}</style></head><body>
-<h3>Server Error</h3><p><b>' . get_class ( $e ) . ':</b> ' . $e->getMessage () . '</p>
-<hr /><p><b>Source file：</b>' . $e->getFile () . ' <b>Line：</b>' . $e->getLine () . '<br><br>
-<b>Stack trace：</b><br></p><div>';
-	$lines=preg_split('/#[0-9]{0,100}\s/', $e->getTraceAsString ());
-	$i=count($lines)-1;
-	foreach ($lines as $item){
-		if(!empty($item)){
-			$html.='#'.$i.' '.$item.'<br>';
-		}
-		$i--;
-	}
-	
-	$html .= '</div><hr /><b>version infomartion:</b>ArkPHP framework version:' . ark_version () . ' PHP version:' . phpversion () . '</body></html>';
-	
-	exit ( $html );
-}
 
-function ark_handleFileError(){
-	set_error_handler(function (){
-		$args=func_get_args();
-		throw new FileSystemException($args[1]);
-	});
-}
 
-function ark_unhandleError(){
-	restore_error_handler ();
-}
-
-function ark_importFile($filename,$once=FALSE) {
-	ark_handleFileError();
-	if (! file_exists ( $filename )) {
-		throw new FileSystemException ( '指定文件不存在或未找到。文件名:' . $filename );
-	}
-	if($once===FALSE){
-		include $filename;
-	}
-	else{
-		include_once $filename;
-	}
-	ark_unhandleError ();
-	file($filename);
-}
-
-function ark_using($ns) {
-	$items=ark_split($ns,'|',TRUE);
-	foreach ($items as $item){
-		
-	}
-}
 function ark_split($str, $delimiter, $removeEmptyItem = FALSE) {
 	if ($removeEmptyItem === TRUE) {
 		$result = array ();
