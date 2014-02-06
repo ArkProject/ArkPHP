@@ -1,8 +1,6 @@
 <?php
 namespace ark;
-if (! defined ( 'ARK' )) {
-	exit ( 'deny access' );
-}
+defined ( 'ARK' ) or exit ( 'deny access' );
 
 /**
  * Represents a web application.
@@ -52,17 +50,24 @@ class Application {
 			}
 			
 			self::$_instance = new Application ( $appName, $settings );
-			// echo var_dump($_GET);
 			
-			// echo '<br>Welcome use ArkPHP Framework v1.0.1.<br>';
-			// todo: //URL hook logics in here...
-			// ark_strIndexOf();
-			// ark_strLength();
-			// ark_errorHandle();
-			ark_handleFileError();
-			ark_loadFiles ( 'F:\test\test.txt' );
-			ark_unhandleError();
+			$GLOBALS['__ARK_LANGS']['zh-cn']=include ARK_PATH.'i18n/langs/zh-cn.php';
+			
+			//var_dump($GLOBALS['__ARK_LANGS']['zh-cn']);
+			
+			//ark_loadFile ( 'F:\test\test.txt' );
 			//throw new \Exception('ff');
+			/*
+			if(isset($_GET['id'])){
+				echo '姓名：张三；证件号码：'.$_GET['id'].' 客户号：3011';
+			}
+			else 
+				echo '空参数';
+			*/
+			self::$_instance->test();
+			
+			
+			
 			try {} catch (\Exception $e ) {
 			_ark_display_error ( $e );
 		}
@@ -88,6 +93,14 @@ class Application {
 	 * @param string $newInstance        	
 	 */
 	public function usingDB($dbConfigIndex, $newInstance = FALSE) {
+	}
+	
+	function test(){
+		$c=new \ark\template\Compiler(ARK_PATH.'../apps/default/views/test.tpl.html');
+		$text=$c->compileToString();
+		echo '编译结果：<br><hr><textarea style="width:100%; height:300px;">';
+		echo $text;
+		echo '</textarea>';
 	}
 }
 

@@ -33,11 +33,18 @@ function ark_split($str, $delimiter, $removeEmptyItem = FALSE) {
 }
 
 function ark_substr($str, $start, $length = NULL){
-	return substr($str,$start,$length);
+	if($length===NULL){
+		return \substr($str,$start);
+	}
+	return \substr($str,$start,$length);
 }
 
 function ark_indexOf($str,$substr) {
 	return strpos($str,$substr);
+}
+
+function ark_lastIndexOf($str,$substr){
+	return strrpos($str, $substr);
 }
 
 function ark_streq($left, $right, $ignoreCase = TRUE) {
@@ -78,7 +85,7 @@ function ark_startWith($str, $prefix) {
 	}
 	return false;
 }
-function endWith($str,$suffix){
+function ark_endWith($str,$suffix){
 	if (ark_substr($str, ark_strlen($str,FALSE,TRUE) - ark_strlen($suffix,FALSE,TRUE)) === $suffix) {
 		return true;
 	}

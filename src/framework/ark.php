@@ -1,16 +1,17 @@
 <?php
 
-defined('ARK') or define('ARK', microtime(true));
-defined('ARK_VERSION') or define('ARK_VERSION', '1.0.1');
-defined('ARK_PATH') or define('ARK_PATH', dirname(__FILE__).'/');
+defined ( 'ARK' ) or define ( 'ARK', microtime ( true ) );
+defined ( 'ARK_VERSION' ) or define ( 'ARK_VERSION', '1.0.1' );
+defined ( 'ARK_PATH' ) or define ( 'ARK_PATH', dirname ( __FILE__ ) . '/' );
+defined ( 'SECURITY_DIR' ) or define ( 'SECURITY_DIR', dirname ( __FILE__ ) );
 
-//自动加载缓存
-$GLOBALS['__ark_autoload_caches']=array();
-$GLOBALS['__ark_autoload_paths']=array(
+// 自动加载缓存
+$GLOBALS ['__ark_autoload_caches'] = array ();
+$GLOBALS ['__ark_autoload_paths'] = array (
 		ARK_PATH,
-		ARK_PATH.'core/',
-		ARK_PATH.'dao/',
-		ARK_PATH.'i18n/'
+		ARK_PATH . 'core/',
+		ARK_PATH . 'dao/',
+		ARK_PATH . 'i18n/' 
 );
 
 class Ark{
@@ -22,7 +23,7 @@ function _ark_display_error($e) {
 <title>Server Error</title><style type="text/css">
 body,div,p,ul,li,hr{ margin:0; padding:0; font-size:14px;}
 body{margin:0 5px; line-height:20px;}
-h3{font-size:18px; font-weight:bold; margin-bottom:10px;margin-top:0;}
+h3{font-size:18px; font-weight:bold; margin-bottom:5px;margin-top:10px;}
 hr{margin:5px 0; border:none; border-top:1px solid #efefef;}
 p{padding:5px;}
 div{background:#FF9; padding:5px; margin-bottom:20px;}</style></head><body>
@@ -40,7 +41,7 @@ div{background:#FF9; padding:5px; margin-bottom:20px;}</style></head><body>
 
 	$html .= '</div><hr /><b>version infomartion:</b>ArkPHP framework version:' . ARK_VERSION . ' PHP version:' . phpversion () . '</body></html>';
 
-	exit (str_replace(getcwd(), '...', $html) );
+	exit (str_replace(SECURITY_DIR, '~', $html) );
 }
 //捕获所有未处理异常和错误
 \error_reporting( E_ALL );
@@ -102,11 +103,11 @@ function ark_loadFile($filename, $extensions = NULL, $throw = TRUE, &$lookups = 
 		}
 	}
 	if (! $found && $throw) {
-		$msg = '指定文件不存在或未找到。文件名:' . $filename . ' 搜索路径：';
+		$msg ='';
 		foreach ( $lookups as $item ) {
 			$msg .= '<br>' . $item;
 		}
-		throw new ark\FileSystemException ( $msg );
+		throw new ark\FileSystemException ( ark_lang('__ARK_LOOKUP_FILE_FAIL',$filename,$msg) );
 	} else if ($found) {
 		if ($once !== TRUE) {
 			include $path;
@@ -142,11 +143,11 @@ function ark_using($type, $checkClass = TRUE) {
 		$result = class_exists ( $type );
 	}
 	if (! $result) {
-		$msg = '自动载入类失败。未找到要加载的类文件或类未定义。类名：' . $type . ' 搜索路径：';
+		$msg ='';// '自动载入类失败。未找到要加载的类文件或类未定义。类名：' . $type . ' 搜索路径：';
 		foreach ( $lookups as $item ) {
 			$msg .= '<br>' . $item;
 		}
-		_ark_display_error ( new \Exception ( $msg . '<br>' ) );
+		_ark_display_error ( new \Exception ( ark_lang('__ARK_AUTOCLASS_FAIL',$type,$msg) ) );
 	}
 }
 
@@ -156,6 +157,12 @@ function ark_using($type, $checkClass = TRUE) {
 
 //include ARK_PATH.'core/event.class.php';
 //include ARK_PATH.'core/application.class.php';
+
+function ark_lang($val,$_){
+	return call_user_func_array('ark\i18n\Culture::getLocalString', func_get_args());
+}
+
+
 include ARK_PATH.'functions.php';
 
 

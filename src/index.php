@@ -1,4 +1,5 @@
 ﻿<?php
+define('SECURITY_DIR',dirname(__FILE__));
 require './framework/ark.php';
 //namespace ark;
 
@@ -30,7 +31,7 @@ die();*/
 
 // starting app...include ARK_PATH.'../app_data/config.php'
 ark\Application::run(array());
-
+//new xxxx();
 //die('end');
 //echo $_GET['name'].'gfhf';
 
