@@ -4,6 +4,7 @@ defined ( 'ARK' ) or define ( 'ARK', microtime ( true ) );
 defined ( 'ARK_VERSION' ) or define ( 'ARK_VERSION', '1.0.1' );
 defined ( 'ARK_PATH' ) or define ( 'ARK_PATH', dirname ( __FILE__ ) . '/' );
 defined ( 'SECURITY_DIR' ) or define ( 'SECURITY_DIR', dirname ( __FILE__ ) );
+defined ( 'ROOT_DIR' ) or define ( 'ROOT_DIR', ARK_PATH.'../' );
 
 // 自动加载缓存
 $GLOBALS ['__ark_autoload_caches'] = array ();
@@ -13,10 +14,6 @@ $GLOBALS ['__ark_autoload_paths'] = array (
 		ARK_PATH . 'dao/',
 		ARK_PATH . 'i18n/' 
 );
-
-class Ark{
-	
-}
 
 function _ark_display_error($e) {
 	$html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -40,7 +37,11 @@ div{background:#FF9; padding:5px; margin-bottom:20px;}</style></head><body>
 	}
 
 	$html .= '</div><hr /><b>version infomartion:</b>ArkPHP framework version:' . ARK_VERSION . ' PHP version:' . phpversion () . '</body></html>';
-
+	@ob_end_clean();
+	if(@ob_get_length()){
+		@ob_end_flush();
+	}
+	
 	exit (str_replace(SECURITY_DIR, '~', $html) );
 }
 //捕获所有未处理异常和错误
@@ -162,6 +163,15 @@ function ark_lang($val,$_){
 	return call_user_func_array('ark\i18n\Culture::getLocalString', func_get_args());
 }
 
+/**
+ * 启动ARK运行时。
+ * @param array $config 配置参数。
+ */
+function ark_start($config){
+	
+	ark\Runtime::start($config);
+	//ark\Application::run($config);
+}
 
 include ARK_PATH.'functions.php';
 

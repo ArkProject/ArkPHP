@@ -1,4 +1,5 @@
 <?php
+use ark\Runtime;
 if (! defined ( 'ARK' )) {
 	exit ( 'deny access' );
 }
@@ -14,9 +15,44 @@ function ark_version() {
  * @return Application
  */
 function ark_app() {
-	return Application::getInstance ();
+	return Runtime::getApplication();
 }
 
+function _ark_randHex($start, $end, $len) {
+	$r = dechex(mt_rand($start, $end)) . '';
+	//echo strlen($r);
+	while (strlen($r) < $len) {
+
+		$r = $r . dechex(mt_rand($start, $end));
+	}
+	return substr($r, 0, $len);
+}
+/**
+ * 获取一个新的 UUID ，关于UUID请参考：百科。
+ * @param boolean $short 是否去掉连接短线，默认为 true.
+ * @return String
+ */
+function ark_uuid($short = true) {
+	$uuid = dechex(microtime(true));
+	if (!$short) {
+		$uuid .='-';
+	}
+	$uuid .=_ark_randHex(1000000, 4000000, 4);
+	if (!$short) {
+		$uuid .='-';
+	}
+	$uuid .=_ark_randHex(4000000, 8000000, 4);
+	if (!$short) {
+		$uuid .='-';
+	}
+	$uuid .=_ark_randHex(8000000, 12000000, 4);
+	if (!$short) {
+		$uuid .='-';
+	}
+	$uuid .=_ark_randHex(12000000, 16000000, 12);
+
+	return $uuid;
+}
 
 function ark_split($str, $delimiter, $removeEmptyItem = FALSE) {
 	if ($removeEmptyItem === TRUE) {
@@ -63,7 +99,7 @@ function ark_streq($left, $right, $ignoreCase = TRUE) {
  * @return integer
  */
 function ark_strlen($value, $trimWhitespace = TRUE, $useCharacterMode = FALSE, $encoding = NULL) {
-	if (! $value) {
+	if (NULL===$value || gettype($value)!='string') {
 		return 0;
 	}
 	
@@ -72,10 +108,14 @@ function ark_strlen($value, $trimWhitespace = TRUE, $useCharacterMode = FALSE, $
 	}
 	
 	if ($useCharacterMode === FALSE) {
+		
 		preg_match_all ( '/./us', $value, $match );
 		return count ( $match [0] );
-	} else {
+	} else if($encoding!==NULL){
 		return mb_strlen ( $value, $encoding );
+	}
+	else {
+		return mb_strlen ( $value);
 	}
 }
 

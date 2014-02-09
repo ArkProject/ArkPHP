@@ -1,5 +1,5 @@
 <?php
-namespace ark\template;
+namespace ark\view;
 defined ( 'ARK' ) or exit ( 'deny access' );
 
 /**
@@ -177,10 +177,31 @@ abstract class Parser{
 class VarParser extends Parser{
 	
 	function parse($expr){
-		if(!ark_startWith($expr, '$')){
+		if(!preg_match('/^(\$|\#)/', $expr)){
 			return self::PARSE_CONTINUE;
 		}
-		$this->result= '<?php echo '. $this->getCompiler()->parseExpr($expr) .'; ?>';
+		//$expr=ark_substr($expr, 0,ark_strlen($expr)-1);
+		$expr=preg_replace('/\s*\|\s*(\w+)/', '@@@@$1', $expr);
+		
+		$arr=preg_split('/@@@@/', $expr);
+		
+		if(count($arr)==1){
+			$this->result= '<?php echo '. $this->getCompiler()->parseExpr($arr[0]) .'; ?>';
+		}
+		else if(count($arr)==2){
+			$params=$this->getCompiler()->parseParams($arr[1]);
+			if(count($params)>=1){
+				$name=key($params);
+				$this->result= '<?php echo $view->format(\''.$name.'\','.$params[$name].','. $this->getCompiler()->parseExpr($arr[0]) .'); ?>';
+			}
+			else{
+				$this->result= '<?php echo '. $this->getCompiler()->parseExpr($arr[0]) .'; ?>';
+			}
+		}
+		else{
+			return self::PARSE_CONTINUE;
+		}
+		
 		return parent::PARSE_DONE;
 	}
 }
@@ -192,10 +213,12 @@ class IfParser extends Parser{
 		if(preg_match('/^if\s*\(/', $expr)){
 			$compiler->openBlock('if');
 			$this->result= '<?php '. $compiler->parseExpr($expr) .'{ ?>';
+			return parent::PARSE_DONE;
 		}
 		else if(preg_match('/^if\s/', $expr)){
 			$compiler->openBlock('if');
 			$this->result= '<?php if( '. $compiler->parseExpr($expr) .'){ ?>';
+			return parent::PARSE_DONE;
 		}
 		else if(preg_match('/^elif\s*\(/', $expr)){
 				
@@ -205,6 +228,7 @@ class IfParser extends Parser{
 			$expr=preg_replace('/^elif\s/', '', $expr);
 				
 			$this->result= '<?php else if '. $compiler->parseExpr($expr) .'{ ?>';
+			return parent::PARSE_DONE;
 		}
 		else if(preg_match('/^elif\s/', $expr)){
 			
@@ -214,6 +238,7 @@ class IfParser extends Parser{
 			$expr=preg_replace('/^elif\s/', '', $expr);
 			
 			$this->result= '<?php }else if( '. $compiler->parseExpr($expr) .'){ ?>';
+			return parent::PARSE_DONE;
 		}
 		else if(preg_match('/^else\s*$/', $expr)){
 				
@@ -222,6 +247,7 @@ class IfParser extends Parser{
 			}
 				
 			$this->result= '<?php }else{ ?>';
+			return parent::PARSE_DONE;
 		}
 		else if(preg_match('/^\/\s*if/', $expr)){
 				
@@ -231,8 +257,63 @@ class IfParser extends Parser{
 			$compiler->closeBlock('if');
 				
 			$this->result= '<?php }?>';
+			return parent::PARSE_DONE;
 		}
-		return parent::PARSE_DONE;
+		return parent::PARSE_CONTINUE;
+	}
+}
+
+class ForParser extends Parser{
+
+	function parse($expr){
+		$compiler=$this->getCompiler();
+		if(preg_match('/^for\s*\:/', $expr)){
+			$compiler->openBlock('for');
+			$expr=trim(preg_replace('/^for\s*\:/', '', $expr));
+			
+			$var='';
+			$val='';
+			if(preg_match('/^\w\s*\=/', $expr)){
+				$params=$this->getCompiler()->parseParams($expr);
+				if(count($params)<2){
+					throw new \Exception('for 表达式必须有2个变量');
+				}
+				$var=key($params);
+				$val=$params[$var];
+				
+				if(!isset($params['step'])){
+					$params['step']=1;
+				}
+				$this->result= '<?php $__iteration__'.$var.'=0; for($'.$var.'='.$val.';$'. $var .'<'.$params['max'].';'.$var.'+='.$params['step'].'){$__iteration__'.$var.'+=1; ?>';
+				
+			}
+			else{
+				$index=0;
+				$var=$this->getCompiler()->getWord($expr,$index);
+				$expr=trim(ark_substr($expr, $index+1));
+				$params=$this->getCompiler()->parseParams($expr);
+				if(!isset($params['max'])){
+					throw new \Exception('for 表达式未设置最大值。');
+				}
+				if(!isset($params['step'])){
+					$params['step']=1;
+				}
+				$this->result= '<?php $__iteration__'.$var.'=0; for(;$'. $var .'<'.$params['max'].';'.$var.'+='.$params['step'].'){$__iteration__'.$var.'+=1; ?>';
+			}
+			
+			return parent::PARSE_DONE;
+		}
+		else if(preg_match('/^\/\s*for/', $expr)){
+
+			if($compiler->getBlockCount('for')<=0){
+				throw new \Exception('/for 必须与  for 配对使用');
+			}
+			$compiler->closeBlock('for');
+
+			$this->result= '<?php }?>';
+			return parent::PARSE_DONE;
+		}
+		return parent::PARSE_CONTINUE;
 	}
 }
 
@@ -251,7 +332,15 @@ class Compiler{
 		return preg_match('/\w{1}/', $char);
 	}
 	
-	protected function getWord(&$buffer,&$index=0,$count=-1){
+	/**
+	 * 获取一个单词 \w
+	 * @param unknown $buffer
+	 * @param number $index
+	 * @param unknown $count
+	 * @throws \Exception
+	 * @return Ambigous <string, unknown>
+	 */
+	public function getWord(&$buffer,&$index=0,$count=-1){
 		$result='';
 		if($count===-1){
 			$count=ark_strlen($buffer);
@@ -260,6 +349,7 @@ class Compiler{
 		for (;$index<$count;$index++){
 			
 			if(!$this->isWord($buffer[$index])){
+				$index--;
 				break;
 			}
 			else {
@@ -322,6 +412,69 @@ class Compiler{
 		throw new \Exception('字符串示结束');
 	}
 	
+	protected function getToEnd(&$expr,&$index=0,$count=-1,$end=' '){
+	
+		if($count===-1){
+			$count=ark_strlen($expr);
+		}
+		$result='';
+		for (;$index<$count;$index++){
+				
+			if($expr[$index]===$end){
+				$index--;
+				return $result;
+			}
+			else{
+				$result.=$expr[$index];
+			}
+		}
+		return $result;
+	}
+	
+	public function parseParams($expr,$index=0,$count=-1){
+		if($count===-1){
+			$count=ark_strlen($expr);
+		}
+		$name='';
+		$value='';
+		$result=array();
+		for (;$index<$count;$index++){
+			if(preg_match('/\s/', $expr[$index])){
+				continue;
+			}
+			
+			$name=$this->getWord($expr,$index,$count);
+			$index++;
+			if($expr[$index]!='='){
+				throw new \Exception($expr.'错误的参数表达式'.$expr[$index]);
+			}
+			$index++;
+			if($expr[$index]=='\('){
+				$last=$this->findPairRight($expr,$index+1, '(', ')',$count);
+				if($last===-1){
+					throw new \Exception('括号未结束');
+				}
+				$index++;
+				$value=$this->parseExpr($expr,$index,$last);
+				$result[$name]=$value;
+			}
+			else if($expr[$index]=='\''){
+				$index++;
+				$value='\''. $this->getString($expr,$index,$count) .'\'';
+				$result[$name]=$value;
+			}
+			else {
+				$value=$this->getToEnd($expr,$index,$count,' ');
+				$value=$this->parseExpr($value);
+				$result[$name]=$value;
+			}
+			
+			$name='';
+			$value='';
+		}
+		return $result;
+	}
+	
 	public function parseExpr(&$buffer,&$index=0,$count=-1){
 		//$result=$this->getWord($buffer,$index,$count);
 		//if(ark_strlen($result)===0){
@@ -374,7 +527,7 @@ class Compiler{
 				goto RESTART;
 			}
 			else if($buffer[$i]=='@'){
-				$index=$i+1;
+				$i++;
 				$result .='$view->call['. $this->getWord($buffer,$index,$count) .']';
 				goto RESTART;
 			}
@@ -416,6 +569,7 @@ class Compiler{
 		$filters=array();
 		$filters[]=new VarParser($this);
 		$filters[]=new IfParser($this);
+		$filters[]=new ForParser($this);
 		
 		foreach ( $filters as $parser ) {
 			$result = $parser->parse ( $expr );
@@ -428,7 +582,7 @@ class Compiler{
 				throw new \Exception ( '解析：' . $result );
 			}
 		}
-		return ' UNKOWN TAG( '. $expr .')';
+		return ' UNKOWN TOKEN( '. $expr .')';
 	}
 	
 	
@@ -481,6 +635,9 @@ class Compiler{
 		//	$brarray = explode(' ',$buffer);
 		//	
 		//}
+		
+		
+		
 		
 		$reader=new StreamReader($this->_tplPath);
 		$reader->open();

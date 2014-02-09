@@ -5,36 +5,41 @@ defined ( 'ARK' ) or exit ( 'deny access' );
 /**
  * Represents a web application.
  *
- * @author jun你好
+ * @author jun
  *        
  */
 class Application {
 	
 	/**
 	 *
-	 * @var Application
-	 */
-	private static $_instance;
-	/**
-	 *
 	 * @var string
 	 */
-	private $_appName;
+	private $_appPath;
+	private $_controllerPath;
+	private $_dataPath;
+	private $_viewPath;
+	private $_modelPath;
 	/**
 	 *
 	 * @var array
 	 */
-	private $_settings;
-	protected function __construct($appName, $settings) {
-		$this->_appName = $appName;
-		$this->_settings = $settings;
+	protected $settings;
+	protected $routing;
+	public final function __construct($appPath, &$settings,&$routing) {
+		$this->_appPath = $appPath;
+		$this->_controllerPath=$appPath.'controllers/';
+		$this->_viewPath=$appPath.'views/';
+		$this->_modelPath=$appPath.'models/';
+		$this->settings = $settings;
+		$this->routing=$routing;
+		$this->init();
 	}
 	
 	/**
 	 * starts this application.
 	 *
 	 * @param array $settings        	
-	 */
+	 
 	public static final function run($settings = NULL, $appName = NULL) {
 		
 		
@@ -57,13 +62,13 @@ class Application {
 			
 			//ark_loadFile ( 'F:\test\test.txt' );
 			//throw new \Exception('ff');
-			/*
+			
 			if(isset($_GET['id'])){
 				echo '姓名：张三；证件号码：'.$_GET['id'].' 客户号：3011';
 			}
 			else 
 				echo '空参数';
-			*/
+			
 			self::$_instance->test();
 			
 			
@@ -74,18 +79,45 @@ class Application {
 		//
 		//exit ( 0 );
 	}
+	*/
 	
-	/**
-	 * gets current Application Instance.
-	 *
-	 * @return Application
-	 */
-	public static function getInstance() {
-		if (! self::$_instance) {
-			throw new Exception ( 'Application not started yet.' );
-		}
-		return self::$_instance;
+	public function getView(){
+		return new View();
 	}
+	
+	protected function init(){
+		if(isset($_GET['_c'])){
+			$this->routing['controller']=$_GET['_c'];
+		}
+		else if(isset($_POST['_c'])){
+			$this->routing['controller']=$_POST['_c'];
+		}
+		
+		if(isset($_GET['_a'])){
+			$this->routing['action']=$_GET['_a'];
+		}
+		else if(isset($_POST['_a'])){
+			$this->routing['action']=$_POST['_a'];
+		}
+		//$data=serialize($this->settings);
+		//file_put_contents(ROOT_DIR.'data/temp/c/1.php', $data);
+		$controller=ucfirst($this->routing['controller']).'Controller';
+		$filename=$this->_controllerPath.strtolower($this->routing['controller']).'.controller.php';
+		
+		if(!@file_exists($filename)){
+			throw new \Exception('[404]未找到指定 Controller。Controller:'. $filename);
+		}
+		include $filename;
+		
+		$instance=new $controller($this);
+		
+		
+	}
+	
+	public function getRouting(){
+		return $this->routing;
+	}
+	
 	
 	/**
 	 *
@@ -95,13 +127,21 @@ class Application {
 	public function usingDB($dbConfigIndex, $newInstance = FALSE) {
 	}
 	
-	function test(){
-		$c=new \ark\template\Compiler(ARK_PATH.'../apps/default/views/test.tpl.html');
-		$text=$c->compileToString();
-		echo '编译结果：<br><hr><textarea style="width:100%; height:300px;">';
-		echo $text;
-		echo '</textarea>';
+	
+	public function getAppPath(){
+		return $this->_appPath;
 	}
+	
+	/**
+	 * 映射一个相对于应用程序的服务器路径。
+	 * @param string $path
+	 */
+	public function mapPath($path){
+		return $this->getAppPath().$path;
+	}
+	
+	
+	
 }
 
 ?>

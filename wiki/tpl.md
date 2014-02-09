@@ -1,5 +1,5 @@
 
-STPL(Standard Template Programming Language),标准模板编程语言。
+OTPL(Open Template Programming Language),开放模板编程语言。
 ======
 ##术语定义：
 `LWS`:线性空白。由连续的空白( )、制表符(\t)组成。正则表达式为：\s
