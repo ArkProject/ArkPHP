@@ -1,6 +1,6 @@
 <?php
 namespace ark\view;
-defined ( 'ARK' ) or exit ( 'deny access' );
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 /**
  * 

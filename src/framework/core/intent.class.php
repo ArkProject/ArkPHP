@@ -1,17 +1,44 @@
 <?php
 namespace ark;
-defined ( 'ARK' ) or exit ( 'deny access' );
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 /**
  * 封装当前请求的上下文。
  * @author jun
  *
  */
-class Intent{
+final class Intent{
 	
-	public function __construct(){
-		
+	private $_routeData=array();
+	private $_appName;
+	public function __construct($routeData){
+		$this->_routeData=$routeData;
 	}
+	
+	/**
+	 * 获取当前程序名称。
+	 */
+	public function getApplicationName(){
+		if(!$this->_appName){
+			if(isset($_GET['_'])){
+				$this->_appName=$_GET['_'];
+			}
+			else if(isset($_POST['_'])){
+				$this->_appName=$_POST['_'];
+			}
+			else if(isset($this->_routeData['app'])){
+				$this->_appName=$this->_routeData['app'];
+			}
+			else{
+				$this->_appName='default';
+			}
+			if(!preg_match('/^\w+$/', $this->_appName)){
+				throw new \Exception('非法的应用程序名称。参数名：_'.$this->_appName);
+			}
+		}
+		return $this->_appName;
+	}
+	
 	
 	public function isPost(){
 		return $this->getRequestMethod()==='POST';
@@ -80,6 +107,10 @@ class Intent{
 		}
 	}
 	
+	/**
+	 * 获取post或put提交的文件
+	 * @param unknown $nameOrIndex
+	 */
 	public function file($nameOrIndex){
 		
 	}
@@ -96,18 +127,45 @@ class Intent{
 		}
 	}
 	
-	public function cookie($name){
+	/**
+	 * 获取或设置cookie的值
+	 * @param unknown $name
+	 * @param string $value
+	 * @return void|string
+	 */
+	public function cookie($name,$value=NULL){
+		if($value!=NULL){
+			$_COOKIE[$name]=$value;
+			return ;
+		}
 		if(isset($_COOKIE[$name])){
 			return $_COOKIE[$name];
 		}
 	}
 	
-	public function session($name){
+	/**
+	 * 获取或设置session的值
+	 * @param unknown $name
+	 * @param string $value
+	 * @return void|string
+	 */
+	public function session($name,$value=NULL){
+		if($value!=NULL){
+			$_SESSION[$name]=$value;
+			return ;
+		}
 		if(isset($_SESSION[$name])){
 			return $_SESSION[$name];
 		}
 	}
 	
+	/**
+	 * 获取当前请求 URI
+	 * @return \ark\Uri
+	 */
+	public function uri(){
+		return Uri::current();
+	}
 }
 
 ?>

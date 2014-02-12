@@ -1,5 +1,6 @@
 <?php
 namespace ark;
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 /**
  * 用于支持事件的基类。

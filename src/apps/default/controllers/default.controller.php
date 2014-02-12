@@ -12,15 +12,17 @@ class DefaultController extends ark\Controller{
 		//ob_clean();
 		//var_dump(get_included_files());
 		//throw new Exception('gg');
+		$u=new \ark\Uri('http://usr:pwd@dom.com:8868/index.php?abc=u#f#f');
+		echo $u->toString();
 		
-		$this->test();
+		//$this->test();
 		
 		
-		return  'hello word';
+		return  '<br>hello word';
 	}
 	
 	function test(){
-		$c=new \ark\template\Compiler(ARK_PATH.'../apps/default/views/test.tpl.html');
+		$c=new \ark\view\Compiler(ARK_PATH.'../apps/default/views/test.tpl.html');
 		$text=$c->compileToString();
 		echo '编译结果：<br><hr><textarea style="width:100%; height:300px;">';
 		echo $text;

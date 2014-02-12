@@ -1,6 +1,6 @@
 <?php
 namespace ark;
-defined ( 'ARK' ) or exit ( 'deny access' );
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 /**
  * ARK 框架运行时。
@@ -10,6 +10,7 @@ defined ( 'ARK' ) or exit ( 'deny access' );
 final class Runtime{
 	private static $_instance;
 	private static $_app;
+	private static $_intent;
 	private static $_debug=FALSE;
 	/**
 	 * 单例启动。
@@ -33,44 +34,29 @@ final class Runtime{
 		if(!($_SERVER["SERVER_PORT"]==80 || $_SERVER["SERVER_PORT"]==23)){
 			$domain.=':'.$_SERVER["SERVER_PORT"];
 		}
-		/*
-		if(isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == 'on')
-		{
-		    echo "HTTPS";
-		}else{
-		    echo "HTTP";
-		}
-		*/
-		$routing=false;
+		
+		$routing=array();
 		if(isset($config['routing'][$domain])){
 			$routing=$config['routing'][$domain];
 		}
 		else if(isset($config['routing']['*'])){
 			$routing=$config['routing']['*'];
 		}
-		else{
-			throw new \Exception('未找到路由配置');
-		}
+		self::$_intent=new Intent($routing);
 		
-		if(isset($_GET['_'])){
-			$routing['app']=$_GET['_'];
-		}
-		else if(isset($_POST['_a'])){
-			$routing['app']=$_POST['_'];
-		}
 		
-		if($routing['app']=='phpinfo'){
-			if(isset($config['debug']) && $config['debug']=='false'){
-				die( 'Welcome use ARKPHP framework!');
+		if (self::$_intent->getApplicationName () == 'phpinfo') {
+			if (isset ( $config ['debug'] ) && $config ['debug'] == 'false') {
+				die ( 'Welcome use ARKPHP framework!' );
 			}
-			$_SERVER['ARKPHP']=ARK_VERSION;
-			phpinfo();
-			exit(0);
+			$_SERVER ['ARKPHP'] = ARK_VERSION;
+			phpinfo ();
+			exit ( 0 );
 		}
 		
-		$appPath=ROOT_DIR.'apps/'.$routing['app'].'/';
-		if(!@file_exists($appPath)){
-			die( 'Welcome use ARKPHP framework!'.$appPath);
+		$appPath=realpath(ROOT_DIR.'apps/'. self::$_intent->getApplicationName());
+		if(!$appPath || !@file_exists($appPath)){
+			die( 'Welcome use ARKPHP framework!');
 		}
 		
 		//clears all buffer
@@ -80,13 +66,17 @@ final class Runtime{
 			});
 		}
 		
-		$filename=$appPath.'app.class.php';
+		$filename=$appPath.'/app.class.php';
 		if(@file_exists($filename)){
 			include $filename;
-			self::$_app=new \App($appPath,$config,$routing);
+			if(!class_exists('\App')){
+				throw new \Exception('未定义 类 \App');
+			}
+			self::$_app=new \App($appPath.'/',$config,$routing);
+			//if(class_parents(\App))
 		}
 		else{
-			self::$_app=new Application($appPath,$config,$routing);
+			self::$_app=new Application($appPath.'/',$config,$routing);
 		}
 		
 		exit(0);
@@ -102,6 +92,10 @@ final class Runtime{
 			throw new \Exception ( 'Application not started yet.' );
 		}
 		return self::$_app;
+	}
+	
+	public static function getIntent(){
+		return self::$_intent;
 	}
 	
 	/**

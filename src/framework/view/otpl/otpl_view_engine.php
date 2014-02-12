@@ -1,6 +1,6 @@
 <?php
 namespace ark\view\otpl;
-defined ( 'ARK' ) or exit ( 'deny access' );
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 class OtplViewEngine extends \ark\view\ViewEngine{
 	

@@ -1,6 +1,6 @@
 <?php
 namespace ark;
-defined ( 'ARK' ) or exit ( 'deny access' );
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 /**
  * Represents a web application.

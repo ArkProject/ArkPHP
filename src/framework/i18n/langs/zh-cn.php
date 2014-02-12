@@ -7,6 +7,7 @@ return array(
 	'__ARK_AUTOCLASS_FAIL'			=>'自动载入类失败。未找到要加载的类文件或类未定义。类名：{0} 搜索路径：{1}',
 	'__ARK_ARGUMENT_EXCEPTION'		=>'参数异常。',
 	'__ARK_ARGUMENT_EXCEPTION_NAME'	=>' 参数名：{0}',
+	'__ARK_ARGUMENT_NULL_EXCEPTION'	=>'参数不能为空。',
 	'FAILED'						=>'DD'
 );
 

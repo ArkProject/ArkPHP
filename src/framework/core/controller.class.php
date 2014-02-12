@@ -1,6 +1,6 @@
 <?php
 namespace ark;
-defined ( 'ARK' ) or exit ( 'deny access' );
+defined ( 'ARK' ) or exit ( 'access denied' );
 
 abstract  class Controller{
 	/**
@@ -21,7 +21,7 @@ abstract  class Controller{
 	 */
 	public final function __construct($app){
 		$this->app=$app;
-		$this->intent=new Intent();
+		$this->intent=Runtime::getIntent();
 		$routing=$this->app->getRouting();
 		$action = '';
 		

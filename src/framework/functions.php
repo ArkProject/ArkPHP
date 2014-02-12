@@ -1,8 +1,6 @@
 <?php
 use ark\Runtime;
-if (! defined ( 'ARK' )) {
-	exit ( 'deny access' );
-}
+defined ( 'ARK' ) or exit ( 'access denied' );
 function ark_version() {
 	return '1.0.1';
 }
