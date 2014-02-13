@@ -2,7 +2,7 @@
 namespace ark;
 defined ( 'ARK' ) or exit ( 'access denied' );
 
-abstract  class Controller{
+abstract class Controller{
 	/**
 	 * 获取当前应用程序。
 	 * @var \ark\Application
@@ -21,7 +21,7 @@ abstract  class Controller{
 	 */
 	public final function __construct($app){
 		$this->app=$app;
-		$this->intent=Runtime::getIntent();
+		$this->intent=\Ark::getIntent();
 		$routing=$this->app->getRouting();
 		$action = '';
 		
@@ -47,7 +47,7 @@ abstract  class Controller{
 		
 		$result=$this->$action();
 		
-		if(!Runtime::debug()){
+		if(!\Ark::debug()){
 			ob_end_flush();
 		}
 		

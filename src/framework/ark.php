@@ -6,6 +6,108 @@ defined ( 'ARK_PATH' ) or define ( 'ARK_PATH', dirname ( __FILE__ ) . '/' );
 defined ( 'SECURITY_DIR' ) or define ( 'SECURITY_DIR', dirname ( __FILE__ ) );
 defined ( 'ROOT_DIR' ) or define ( 'ROOT_DIR', ARK_PATH.'../' );
 
+final class Ark{
+	private static $_instance;
+	private static $_app;
+	private static $_intent;
+	private static $_debug=FALSE;
+	
+	/**
+	 * 单例启动。
+	 */
+	private function __construct(){
+	
+	}
+	
+	public static function start($config){
+	
+		if($config && isset($config['debug'])){
+			self::$_debug=$config['debug']==='true';
+		}
+	
+		if(self::$_instance){
+			throw new Exception ( 'Runtime has already started.' );
+		}
+		self::$_instance=new Ark();
+	
+		$domain=$_SERVER['HTTP_HOST'];
+		if(!($_SERVER["SERVER_PORT"]==80 || $_SERVER["SERVER_PORT"]==23)){
+			$domain.=':'.$_SERVER["SERVER_PORT"];
+		}
+	
+		$routing=array();
+		if(isset($config['routing'][$domain])){
+			$routing=$config['routing'][$domain];
+		}
+		else if(isset($config['routing']['*'])){
+			$routing=$config['routing']['*'];
+		}
+		self::$_intent=new \ark\Intent($routing);
+	
+	
+		if (self::$_intent->getApplicationName () == 'phpinfo') {
+			if (isset ( $config ['debug'] ) && $config ['debug'] == 'false') {
+				die ( 'Welcome use ARKPHP framework!' );
+			}
+			$_SERVER ['ARKPHP'] = ARK_VERSION;
+			phpinfo ();
+			exit ( 0 );
+		}
+	
+		$appPath=realpath(ROOT_DIR.'apps/'. self::$_intent->getApplicationName());
+		if(!$appPath || !@file_exists($appPath)){
+			die( 'Welcome use ARKPHP framework!');
+		}
+	
+		//clears all buffer
+		if(!self::debug()){
+			ob_start(function (){
+	
+			});
+		}
+	
+		$filename=$appPath.'/app.class.php';
+		if(@file_exists($filename)){
+			include $filename;
+			if(!class_exists('\App')){
+				throw new \Exception('未定义 类 \App');
+			}
+			self::$_app=new \App($appPath.'/',$config,$routing);
+			//if(class_parents(\App))
+		}
+		else{
+			self::$_app=new \ark\Application($appPath.'/',$config,$routing);
+		}
+	
+		exit(0);
+	}
+	
+	/**
+	 *
+	 * @throws \Exception
+	 * @return \ark\Application 返回当前应用程序唯一实例。
+	 */
+	public static function getApplication() {
+		if (! self::$_app) {
+			throw new \Exception ( 'Application not started yet.' );
+		}
+		return self::$_app;
+	}
+	
+	public static function getIntent(){
+		return self::$_intent;
+	}
+	
+	/**
+	 * 获取一个值，指示当前是否启用 DEBUG 模式。
+	 * @return boolean
+	 */
+	public static function debug(){
+		return self::$_debug;
+	}
+}
+
+
 // 自动加载缓存
 $GLOBALS ['__ark_autoload_caches'] = array ();
 $GLOBALS ['__ark_autoload_paths'] = array (
@@ -119,37 +221,53 @@ function ark_loadFile($filename, $extensions = NULL, $throw = TRUE, &$lookups = 
 	\ark_unhandleError ();
 	return $found;
 }
-function ark_using($type, $checkClass = TRUE) {
-	if (isset ( $GLOBALS ['__ark_autoload_caches'] [$type] )) {
+
+function ark_using($fullname, $instantiable = TRUE) {
+	$orign=$fullname;
+	if (isset ( $GLOBALS ['__ark_autoload_caches'] [$orign] )) {
 		return;
 	}
+	
+	if(ark_startWith($fullname,'\\')){
+		$fullname = ark_substr($fullname, 1);
+	}
+	else if(ark_startWith($fullname,'ark.')){
+		$fullname = str_replace ( 'ark.', 'ark\\', $fullname );
+	}
+	$fullname = str_replace ( '.', '\\', $fullname );
+	
+	if ($instantiable === TRUE && class_exists ( $fullname,FALSE)) {
+		return ;
+	}
+	
 	$path = preg_replace_callback ( '/(^[A-Z]{1,})|(\.[A-Z]{1,})|(\\[A-Z]{1,})/', function ($m) {
 		return strtolower ( $m [0] );
-	}, $type );
+	}, $fullname );
 	$path = preg_replace_callback ( '/[A-Z]{1,}/', function ($m) {
 		return '_' . strtolower ( $m [0] );
 	}, $path );
-	$path = str_replace ( '.', '/', $path );
+	
 	$path = str_replace ( '\\_', '\\', $path );
-	$path = str_replace ( '\ark\core\\', '', $path );
-	$path = str_replace ( '\ark\\', '', $path );
 	$path = str_replace ( 'ark\core\\', '', $path );
 	$path = str_replace ( 'ark\\', '', $path );
+	
 	$lookups = array ();
-	$result = ark_loadFile ( $path, array (
-			'.class.php',
-			'.php' 
-	), FALSE, $lookups, FALSE );
-	if ($result && $checkClass === TRUE) {
-		$result = class_exists ( $type );
+	$extensions=array('.class.php');
+	if($instantiable!==TRUE){
+		$extensions[]='.php';
+	}
+	$result = ark_loadFile ( $path,$extensions, FALSE, $lookups, TRUE );
+	if ($result && $instantiable === TRUE) {
+		$result = class_exists ( $fullname );
 	}
 	if (! $result) {
 		$msg ='';// '自动载入类失败。未找到要加载的类文件或类未定义。类名：' . $type . ' 搜索路径：';
 		foreach ( $lookups as $item ) {
 			$msg .= '<br>' . $item;
 		}
-		_ark_display_error ( new \Exception ( ark_lang('__ARK_AUTOCLASS_FAIL',$type,$msg) ) );
+		_ark_display_error ( new \Exception ( ark_lang('__ARK_AUTOCLASS_FAIL',$fullname,$msg) ) );
 	}
+	$GLOBALS ['__ark_autoload_caches'] [$orign]=TRUE;
 }
 
 //注册自动导入类
@@ -169,7 +287,7 @@ function ark_lang($val,$_){
  */
 function ark_start($config){
 	
-	ark\Runtime::start($config);
+	Ark::start($config);
 	//ark\Application::run($config);
 }
 

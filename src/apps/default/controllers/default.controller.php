@@ -1,6 +1,8 @@
 <?php
+use ark\Uri;
+use ark\Controller;
 
-class DefaultController extends ark\Controller{
+class DefaultController extends Controller{
 	
 	function onAction($action){
 		//befor
@@ -10,9 +12,11 @@ class DefaultController extends ark\Controller{
 	
 	protected function action_index() {
 		//ob_clean();
-		//var_dump(get_included_files());
+		var_dump(get_included_files(),"<br>");
 		//throw new Exception('gg');
-		$u=new \ark\Uri('http://usr:pwd@dom.com:8868/index.php?abc=u#f#f');
+		die('fdgd');
+		
+		$u=new Uri('http://usr:pwd@dom.com:8868/index.php?abc=u#f#f');
 		echo $u->toString();
 		
 		//$this->test();
