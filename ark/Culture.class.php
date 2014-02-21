@@ -1,6 +1,7 @@
 <?php
-namespace ark\i18n;
+namespace ark;
 defined ( 'ARK' ) or exit ( 'deny access' );
+
 /**
  * 
  * @author jun
@@ -61,6 +62,8 @@ class Culture{
 		} else if (isset ( $GLOBALS ['__ARK_LANGS'] [$def_lang] ) && isset ( $GLOBALS ['__ARK_LANGS'] [$def_lang] ) && isset ( $GLOBALS ['__ARK_LANGS'] [$def_lang] [$var] )) {
 			return self::format ( $GLOBALS ['__ARK_LANGS'] [$def_lang] [$var], func_get_args (), 1 );
 		}
+		var_dump($GLOBALS ['__ARK_LANGS']);
+		die();
 		return $var;
 	}
 	

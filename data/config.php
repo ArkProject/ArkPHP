@@ -19,7 +19,7 @@ return array (
 		//默认路由配置：域名：应用，控制器，动作
 		'routing' => array (
 				'*' => array (
-						'app' => 'default',
+						'app' => 'myapp',
 						'controller' => 'default',
 						'action' => 'index' 
 				) 

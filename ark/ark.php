@@ -1,171 +1,64 @@
 <?php
+/*
+ * Ark PHP Framework.
+ * Ark 标准库。
+ * 
+ * $ID$
+ * 
+ * */
 
-defined ( 'ARK' ) or define ( 'ARK', microtime ( true ) );
-defined ( 'ARK_VERSION' ) or define ( 'ARK_VERSION', '1.0.1' );
-defined ( 'ARK_PATH' ) or define ( 'ARK_PATH', dirname ( __FILE__ ) . '/' );
-defined ( 'SECURITY_DIR' ) or define ( 'SECURITY_DIR', dirname ( __FILE__ ) );
-defined ( 'ROOT_DIR' ) or define ( 'ROOT_DIR', ARK_PATH.'../' );
+define ( 'ARK', microtime ( true ) );
+define ( 'ARK_VERSION', '1.0.1' );
+define ( 'ARK_PATH', dirname ( __FILE__ ) . '\\' );
+defined ( 'APP_ROOT' ) or define ( 'APP_ROOT', realpath ( dirname ( __FILE__ ) . '/..' ) . '\\' );
 
-final class Ark{
-	private static $_instance;
-	private static $_app;
-	private static $_intent;
-	private static $_debug=FALSE;
+// ================================Ark  标准库========================================//
+
+use ark\Runtime;
+use ark\Application;
+
+/**
+ * 启动ARK运行时。
+ * @param array $config 配置参数。
+ */
+function ark_start($config) {
+	// 自动加载类
+	spl_autoload_register ( function ($class) {
+		ark_import ( $class . '.class.php' );
+	}, TRUE );
 	
-	/**
-	 * 单例启动。
-	 */
-	private function __construct(){
-	
-	}
-	
-	public static function start($config){
-	
-		if($config && isset($config['debug'])){
-			self::$_debug=$config['debug']==='true';
+	// 捕获所有未处理异常和错误
+	error_reporting ( E_ALL );
+	set_exception_handler ( function ($e) {
+		Runtime::handleError($e);
+	} );
+	register_shutdown_function ( function () {
+		$error = error_get_last ();//($error ['type'] == E_ERROR || $error ['type'] == E_PARSE)
+		if ($error && isset ( $error ['type'] ) && gettype($error ['type'])=='integer') {
+
+			ob_clean ();
+			$e= new ErrorException ( $error ['message'], $error ['type'], $error ['type'], $error ['file'], $error ['line'] );
+			Runtime::handleError($e);
 		}
+		
+	} );
+	set_error_handler ( function () {
+		$args = func_get_args ();
+		// echo var_export($args[4], TRUE);
+		throw new ErrorException ( $args [1], $args [0], $args [0], $args [2], $args [3] );
+	}, E_ALL );
 	
-		if(self::$_instance){
-			throw new Exception ( 'Runtime has already started.' );
-		}
-		self::$_instance=new Ark();
-	
-		$domain=$_SERVER['HTTP_HOST'];
-		if(!($_SERVER["SERVER_PORT"]==80 || $_SERVER["SERVER_PORT"]==23)){
-			$domain.=':'.$_SERVER["SERVER_PORT"];
-		}
-	
-		$routing=array();
-		if(isset($config['routing'][$domain])){
-			$routing=$config['routing'][$domain];
-		}
-		else if(isset($config['routing']['*'])){
-			$routing=$config['routing']['*'];
-		}
-		self::$_intent=new \ark\Intent($routing);
-	
-	
-		if (self::$_intent->getApplicationName () == 'phpinfo') {
-			if (isset ( $config ['debug'] ) && $config ['debug'] == 'false') {
-				die ( 'Welcome use ARKPHP framework!' );
-			}
-			$_SERVER ['ARKPHP'] = ARK_VERSION;
-			phpinfo ();
-			exit ( 0 );
-		}
-	
-		$appPath=realpath(ROOT_DIR.'apps/'. self::$_intent->getApplicationName());
-		if(!$appPath || !@file_exists($appPath)){
-			die( 'Welcome use ARKPHP framework!');
-		}
-	
-		//clears all buffer
-		if(!self::debug()){
-			ob_start(function (){
-	
-			});
-		}
-	
-		$filename=$appPath.'/app.class.php';
-		if(@file_exists($filename)){
-			include $filename;
-			if(!class_exists('\App')){
-				throw new \Exception('未定义 类 \App');
-			}
-			self::$_app=new \App($appPath.'/',$config,$routing);
-			//if(class_parents(\App))
-		}
-		else{
-			self::$_app=new \ark\Application($appPath.'/',$config,$routing);
-		}
-	
-		exit(0);
-	}
-	
-	/**
-	 *
-	 * @throws \Exception
-	 * @return \ark\Application 返回当前应用程序唯一实例。
-	 */
-	public static function getApplication() {
-		if (! self::$_app) {
-			throw new \Exception ( 'Application not started yet.' );
-		}
-		return self::$_app;
-	}
-	
-	public static function getIntent(){
-		return self::$_intent;
-	}
-	
-	/**
-	 * 获取一个值，指示当前是否启用 DEBUG 模式。
-	 * @return boolean
-	 */
-	public static function debug(){
-		return self::$_debug;
-	}
+	Runtime::start ( $config );
 }
 
-
-// 自动加载缓存
-$GLOBALS ['__ark_autoload_caches'] = array ();
-$GLOBALS ['__ark_autoload_paths'] = array (
-		ARK_PATH,
-		ARK_PATH . 'core/',
-		ARK_PATH . 'dao/',
-		ARK_PATH . 'i18n/' 
-);
-
-function _ark_display_error($e) {
-	$html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Server Error</title><style type="text/css">
-body,div,p,ul,li,hr{ margin:0; padding:0; font-size:14px;}
-body{margin:0 5px; line-height:20px;}
-h3{font-size:18px; font-weight:bold; margin-bottom:5px;margin-top:10px;}
-hr{margin:5px 0; border:none; border-top:1px solid #efefef;}
-p{padding:5px;}
-div{background:#FF9; padding:5px; margin-bottom:20px;}</style></head><body>
-<h3>Server Error</h3><p><b>' . get_class ( $e ) . ':</b> ' . $e->getMessage () . '</p>
-<hr /><p><b>Source file：</b>' . $e->getFile () . ' <b>Line：</b>' . $e->getLine () . '<br><br>
-<b>Stack trace：</b><br></p><div>';
-	$lines=preg_split('/#[0-9]{0,100}\s/', $e->getTraceAsString ());
-	$i=count($lines)-1;
-	foreach ($lines as $item){
-		if(!empty($item)){
-			$html.='#'.$i.' '.$item.'<br>';
-		}
-		$i--;
-	}
-
-	$html .= '</div><hr /><b>version infomartion:</b>ArkPHP framework version:' . ARK_VERSION . ' PHP version:' . phpversion () . '</body></html>';
-	@ob_end_clean();
-	if(@ob_get_length()){
-		@ob_end_flush();
-	}
-	
-	exit (str_replace(SECURITY_DIR, '~', $html) );
+/**
+ * 获取当前应用程序实例。
+ * 
+ * @return \ark\Application
+ */
+function ark_app() {
+	return Runtime::getApplication();
 }
-//捕获所有未处理异常和错误
-\error_reporting( E_ALL );
-\set_exception_handler(function ($e){
-	_ark_display_error($e);
-});
-\register_shutdown_function(function (){
-	$error =  error_get_last();
-	if($error && isset($error['type']) && $error['type']==E_ERROR){
-		ob_clean();
-		$e=new ErrorException($error['message'],$error['type'],$error['type'],$error['file'],$error['line']);
-		_ark_display_error($e);
-	}
-});
-\set_error_handler(function (){
-	$args=func_get_args();
-	//echo var_export($args[4], TRUE);
-	$e=new ErrorException($args[1],$args[0],$args[0],$args[2],$args[3]);
-	throw $e;
-	_ark_display_error($e);
-},E_ALL);
 
 function ark_handleFileError() {
 	\set_error_handler ( function () {
@@ -173,125 +66,234 @@ function ark_handleFileError() {
 		throw new ark\FileSystemException ( $args [1] );
 	} );
 }
-	
+
 function ark_unhandleError() {
 	\restore_error_handler ();
 }
-	
-function ark_loadFile($filename, $extensions = NULL, $throw = TRUE, &$lookups = array(), $once = FALSE) {
-	\ark_handleFileError ();
-	$found = FALSE;
-	$path = '';
-	if ($extensions === NULL) {
-		foreach ( $GLOBALS ['__ark_autoload_paths'] as $dir ) {
-			if (! file_exists ( $dir . $filename )) {
-				$lookups [] = $dir . $filename;
-			} else {
-				$path = $dir . $filename;
-				$found = TRUE;
-				break;
-			}
-		}
-	} else {
-		foreach ( $GLOBALS ['__ark_autoload_paths'] as $dir ) {
-			foreach ( $extensions as $ext ) {
-				if (! file_exists ( $dir . $filename . $ext )) {
-					$lookups [] = $dir . $filename . $ext;
-				} else {
-					$path = $dir . $filename . $ext;
-					$found = TRUE;
-					break;
-				}
-			}
-		}
-	}
-	if (! $found && $throw) {
-		$msg ='';
-		foreach ( $lookups as $item ) {
-			$msg .= '<br>' . $item;
-		}
-		throw new ark\FileSystemException ( ark_lang('__ARK_LOOKUP_FILE_FAIL',$filename,$msg) );
-	} else if ($found) {
-		if ($once !== TRUE) {
-			include $path;
-		} else {
-			include_once $path;
-		}
-	}
-	\ark_unhandleError ();
-	return $found;
-}
 
-function ark_using($fullname, $instantiable = TRUE) {
-	$orign=$fullname;
-	if (isset ( $GLOBALS ['__ark_autoload_caches'] [$orign] )) {
-		return;
-	}
-	
-	if(ark_startWith($fullname,'\\')){
-		$fullname = ark_substr($fullname, 1);
-	}
-	else if(ark_startWith($fullname,'ark.')){
-		$fullname = str_replace ( 'ark.', 'ark\\', $fullname );
-	}
-	$fullname = str_replace ( '.', '\\', $fullname );
-	
-	if ($instantiable === TRUE && class_exists ( $fullname,FALSE)) {
-		return ;
-	}
-	
-	$path = preg_replace_callback ( '/(^[A-Z]{1,})|(\.[A-Z]{1,})|(\\[A-Z]{1,})/', function ($m) {
-		return strtolower ( $m [0] );
-	}, $fullname );
-	$path = preg_replace_callback ( '/[A-Z]{1,}/', function ($m) {
-		return '_' . strtolower ( $m [0] );
-	}, $path );
-	
-	$path = str_replace ( '\\_', '\\', $path );
-	$path = str_replace ( 'ark\core\\', '', $path );
-	$path = str_replace ( 'ark\\', '', $path );
-	
-	$lookups = array ();
-	$extensions=array('.class.php');
-	if($instantiable!==TRUE){
-		$extensions[]='.php';
-	}
-	$result = ark_loadFile ( $path,$extensions, FALSE, $lookups, TRUE );
-	if ($result && $instantiable === TRUE) {
-		$result = class_exists ( $fullname );
-	}
-	if (! $result) {
-		$msg ='';// '自动载入类失败。未找到要加载的类文件或类未定义。类名：' . $type . ' 搜索路径：';
-		foreach ( $lookups as $item ) {
-			$msg .= '<br>' . $item;
-		}
-		_ark_display_error ( new \Exception ( ark_lang('__ARK_AUTOCLASS_FAIL',$fullname,$msg) ) );
-	}
-	$GLOBALS ['__ark_autoload_caches'] [$orign]=TRUE;
-}
-
-//注册自动导入类
-\spl_autoload_extensions('.class.php,.php');
-\spl_autoload_register('ark_using',TRUE);
-
-//include ARK_PATH.'core/event.class.php';
-//include ARK_PATH.'core/application.class.php';
-
-function ark_lang($val,$_){
-	return call_user_func_array('ark\i18n\Culture::getLocalString', func_get_args());
+function ark_lang($var,$_){
+	//class_exists('ark.Culture',TRUE);
+	//return \ark\i18n\Culture::getLocalString(func_get_args());
+	//ark_using('ark\i18n\Culture');
+	//return call_user_func_array(array(ark_app()->getCulture(),'getLocalString'), func_get_args());
+	//return \ark\i18n\Culture::getLocalString(func_get_args());
+	return call_user_func_array('\ark\i18n\Culture::getLocalString', func_get_args());
 }
 
 /**
- * 启动ARK运行时。
- * @param array $config 配置参数。
+ * 获取一个新的 UUID ，关于UUID请参考：百科。
+ * @param boolean $short 是否去掉连接短线，默认为 true.
+ * @return string
  */
-function ark_start($config){
-	
-	Ark::start($config);
-	//ark\Application::run($config);
+function ark_uuid($short = true) {
+	return Runtime::uuid($short);
 }
 
-include ARK_PATH.'functions.php';
+function ark_datetimeParse($str){
 
+	$str=str_replace('年', '-', $str);
+	$str=str_replace('月', '-', $str);
+	$str=str_replace('日', '-', $str);
+	$str=str_replace('时', ':', $str);
+	$str=str_replace('分', ':', $str);
+	$str=str_replace('秒', '.', $str);
+	$str=str_replace('毫秒', '', $str);
+	$str=str_replace('上午', 'AM', $str);
+	$str=str_replace('下午', 'PM', $str);
+	
+	//Wed, 22 Jul 2009 16:24:33 GMT
+	
+	$str=trim($str,'.-');
+
+	return strtotime($str);
+}
+
+function ark_datetimeFormat($timestamp,$format){
+	//http://www.php.net/manual/en/function.date-parse-from-format.php
+	//http://www.php.net/manual/en/function.strftime.php
+	$date = new DateTime("1899-12-31");
+	$parts=array('%','a','A','d','e','j','u','w','U','V','W','b','B','h','m','C','g','G','y','Y','H','l','M','p','P','r','R','S','T','X','z','Z','c','D','F','s','x','n','t');
+	
+	foreach ($parts as $part){
+		$format=str_replace($part, '%'.$part, $format);
+	}
+	return strftime($format,$timestamp);
+}
+
+/**
+ * 合并两个路径。
+ * @param unknown $path1
+ * @param unknown $path2
+ * @param string $glue
+ * @return string
+ */
+function ark_combine($path1,$path2,$glue='\\'){
+	if(!ark_endWith($path1, $glue)){
+		$path1.=$glue;
+	}
+	if(ark_startWith($path2, $glue)){
+		$path2=ark_substr(ark_strlen($glue), $path2);
+	}
+	return $path1.$path2;
+}
+
+/**
+ * 导入一个文件
+ * @param unknown $relativePath
+ * @param string $throw
+ * @return boolean
+ */
+function ark_import($relativePath,$throw=TRUE){
+
+	if(!isset($GLOBALS['__ARK_INC_PATH'])){
+		$GLOBALS['__ARK_INC_PATH']=array(APP_ROOT,ark_combine(APP_ROOT, 'apps'),ARK_PATH);
+	}
+	
+	$result=FALSE;
+	$filename='';
+	$relativePath=str_replace('/', '\\', $relativePath);
+	$lookups=array();
+	foreach ($GLOBALS['__ARK_INC_PATH'] as $base){
+		$filename=ark_combine($base, $relativePath);
+		$result=@file_exists($filename);
+		if($result){
+			break;
+		}
+		else {
+			$lookups[]=$filename;
+		}
+	}
+	if(!$result){
+		$filename=$relativePath;
+		$result=@file_exists($filename);
+	}
+	if($result){
+		include_once $filename;
+		return TRUE;
+	}
+	else if($throw){
+		trigger_error('failed to import: Not found file '.$relativePath.'. lookup paths:<br>'.join('<br>', $lookups),E_USER_ERROR);
+	}
+	else {
+		return FALSE;
+	}
+}
+
+/**
+ * 注册一个搜索路径
+ * @param unknown $path
+ */
+function ark_regsisterIncludePath($path){
+	if(!isset($GLOBALS['__ARK_INC_PATH'])){
+		$GLOBALS['__ARK_INC_PATH']=array(ARK_PATH,APP_ROOT,ark_combine(APP_ROOT, 'apps'));
+	}
+	if(!in_array($path,$GLOBALS['__ARK_INC_PATH'])){
+		$GLOBALS['__ARK_INC_PATH'][]=$path;
+	}
+}
+
+// ================================字符串处理函数========================================//
+
+/**
+ * 将一个字符串分割为字符数组返回。
+ * @param string $str 要处理的字符串。
+ * @param string $encoding 字符串编码。如果为 NULL 则会按字符个数分割(包含中文等宽字符集)，否则将会返回按编码处理后的数组。默认为 NULL.
+ * @return array 
+ */
+function ark_strToArray($str,$encoding=NULL){
+	if(!$encoding){
+		$arr=preg_split('//us', $str);
+		
+		//移除首尾两个空白
+		array_splice($arr,0,1);
+		array_splice($arr,count($arr)-1,1);
+		return $arr;
+	}
+	else{
+		$arr=array();
+		for ($i=0;$i<mb_strlen ( $str ,$encoding);$i++){
+			$arr[]=$str[$i];
+		}
+		return $arr;
+	}
+}
+
+function ark_split($str, $delimiter, $removeEmptyItem = FALSE) {
+	if ($removeEmptyItem === TRUE) {
+		$result = array ();
+		foreach ( explode ( $delimiter, $str ) as $item ) {
+			if (! empty ( $item )) {
+				$result [] = $item;
+			}
+		}
+		return $result;
+	} else {
+		return explode ( $delimiter, $str );
+	}
+}
+
+function ark_substr($str, $start, $length = NULL){
+	if($length===NULL){
+		return \substr($str,$start);
+	}
+	return \substr($str,$start,$length);
+}
+
+function ark_indexOf($str,$substr) {
+	return strpos($str,$substr);
+}
+
+function ark_lastIndexOf($str,$substr){
+	return strrpos($str, $substr);
+}
+
+function ark_streq($left, $right, $ignoreCase = TRUE) {
+}
+
+/**
+ * gets string length.
+ * 
+ * @param string $value        	
+ * @param
+ *        	boolean 计算之前是否清除两端的空白字符，默认为 TRUE。
+ * @param
+ *        	boolean 是否使用字符模式，默认为 FALSE.
+ * @param
+ *        	string 如果使用了字符模式，该参数将确定使用何种编码进行计算。
+ * @return integer
+ */
+function ark_strlen($value, $trimWhitespace = TRUE, $useCharacterMode = FALSE, $encoding = NULL) {
+	if (NULL===$value || gettype($value)!='string') {
+		return 0;
+	}
+	
+	if ($trimWhitespace === TRUE) {
+		$value = trim ( $value );
+	}
+	
+	if ($useCharacterMode === FALSE) {
+		
+		preg_match_all ( '/./us', $value, $match );
+		return count ( $match [0] );
+	} else if($encoding!==NULL){
+		return mb_strlen ( $value, $encoding );
+	}
+	else {
+		return mb_strlen ( $value);
+	}
+}
+
+function ark_startWith($str, $prefix) {
+	if (ark_indexOf($str, $prefix) === 0) {
+		return true;
+	}
+	return false;
+}
+function ark_endWith($str,$suffix){
+	if (ark_substr($str, ark_strlen($str,FALSE,TRUE) - ark_strlen($suffix,FALSE,TRUE)) === $suffix) {
+		return true;
+	}
+	return false;
+}
 
 ?>

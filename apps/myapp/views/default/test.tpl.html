@@ -2,9 +2,14 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>{$title.xxx | datetime='你好'}</title>
+<title>{$hello}</title>
 </head>
 <body>
+今天是：{$now | datetime='Y-m-d'}
+
+<br/>
+
+b
 {literal}
 =========
 {if($val<15)}
@@ -16,7 +21,7 @@ elif 2
 {else}
 else
 {/if}
-{/literal}
+
 ===========
 
 {for:i=0 max=18 step=1}
@@ -27,7 +32,7 @@ for
 for2{#i}
 {/for}
 
-{literal}
+
 {while('tru\'e')}
 	{@request}
 {/while}
