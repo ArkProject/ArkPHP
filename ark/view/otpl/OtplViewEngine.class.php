@@ -9,6 +9,16 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 		
 	}
 	
+	private function getStatePath(){
+		$path=ark_combine(APP_ROOT,'data/.ark/');
+		if(!is_dir($path)){
+			if(!mkdir($path,'0755',TRUE)){
+				throw new \Exception('创建目录失败');
+			}
+		}
+		return $path;
+	}
+	
 	public function render($view,$content,$isFile=TRUE){
 		if(!$isFile || !(ark_endWith($content, '.tpl') || ark_endWith($content, '.tpl.html') || 
 				ark_endWith($content, '.otpl') || ark_endWith($content, '.otpl.html')
@@ -42,7 +52,7 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 	}
 	
 	public function &loadState(){
-		$filename=ark_combine(APP_ROOT,'data/.ark/state.php');
+		$filename=$this->getStatePath().'state.php';
 		$state=NULL;
 		if(@file_exists($filename)){
 			$str=file_get_contents($filename);
@@ -66,7 +76,7 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 			throw new \Exception('错误的状态集');
 		}
 		$str=serialize($state);
-		$filename=ark_combine(APP_ROOT,'data/.ark/state.php');
+		$filename=$this->getStatePath().'state.php';
 		file_put_contents($filename, $str);
 	}
 	
