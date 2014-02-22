@@ -9,7 +9,6 @@
 
 <br/>
 
-b
 {literal}
 =========
 {if($val<15)}
@@ -36,6 +35,15 @@ for2{#i}
 {while('tru\'e')}
 	{@request}
 {/while}
+
+{each:entry items}
+	{:entry.key}={:entry.value}
+{/each}
+
+{loop:item bbb}
+
+{/loop}
+
 {/literal}
 </body>
 </html>

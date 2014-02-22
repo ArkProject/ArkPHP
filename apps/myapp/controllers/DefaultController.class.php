@@ -4,24 +4,6 @@ use ark\Uri;
 use ark\Controller;
 use ark\view\otpl\OtplCompiler;
 
-class View{
-	public $data=array();
-	public function bag($name){
-		return $this->data[$name];
-	}
-	public function format($type,$format,$value){
-		$type=trim($type);
-		$timestamp=intval($value);
-		if($timestamp<1){
-			$timestamp=ark_datetimeParse($value);
-		}
-		if($type=='datetime'){
-			return ark_datetimeFormat($timestamp, $format);
-		}
-		return $type.':'.$format.':'.$value;
-	}
-}
-
 class DefaultController extends Controller{
 	
 	function onAction($action){
@@ -40,6 +22,15 @@ class DefaultController extends Controller{
 		//echo $u->toString();
 		
 		//$this->test();
+		//$entry=new Entry();
+		$arr=new \ark\Map(array('k1'=>'v1','k2'=>'v2'));
+		foreach ($arr as $entry){
+			//$entry->key=$key;
+			//$entry->value=$val;->key=>$entry->value
+			echo $entry->value.'=='.'<br>';
+		}
+		//$arr->remove('k1');
+		echo $arr['k1'].'||';
 		
 		$this->view->hello='hello world';
 		

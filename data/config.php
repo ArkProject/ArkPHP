@@ -10,8 +10,8 @@ return array (
 						'provider' => 'ark\dao\mysql\MysqlProvider',
 						'dbhost' => '127.0.0.1',
 						'dbname' => 'test',
-						'username' => 'sa',
-						'passwd' => 'sa',
+						'username' => 'root',
+						'passwd' => 'rootroot',
 						'encoding' => 'utf-8' 
 				)
 		),

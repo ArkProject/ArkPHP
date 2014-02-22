@@ -3,7 +3,11 @@ namespace ark;
 defined ( 'ARK' ) or exit ( 'deny access' );
 
 
-
+/**
+ * Ark 运行时。该类不能不继承。
+ * @author jun
+ *
+ */
 final class Runtime{
 	private static $_instance;
 	private static $_app;
@@ -18,6 +22,11 @@ final class Runtime{
 	
 	}
 	
+	/**
+	 * 启动运行时。
+	 * @param array $config 配置参数
+	 * @throws \Exception
+	 */
 	public static function start($config){
 	
 		if($config && isset($config['debug'])){
@@ -115,16 +124,19 @@ final class Runtime{
 		$filename=$appPath.'/app.class.php';
 		if(@file_exists($filename)){
 			include $filename;
-			if(!class_exists('\App')){
+			$class=$routing['app'].'\App';
+			if(!class_exists($routing['app'].'\App',FALSE)){
 				throw new \Exception('未定义 类 \App');
 			}
-			self::$_app=new \App($config,$routing);
-			//if(class_parents(\App))
+			self::$_app=new $class($config,$routing);
+			if(!(self::$_app instanceof \ark\Application)){
+				throw new \Exception('加载应用程序失败，App 必须继承 ark\Application  。类：'.$class);
+			}
 		}
 		else{
 			self::$_app=new \ark\Application($config,$routing);
 		}
-	
+		//self::$_app->init();
 		exit(0);
 	}
 	

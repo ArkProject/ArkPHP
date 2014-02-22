@@ -22,22 +22,12 @@ class Application {
 		$this->init();
 	}
 	
+	/**
+	 * 当应用程序启动时调用。
+	 */
 	protected function init(){
 		
-		
-		//ark_regsisterIncludePath($this->routing['app_path']);
-		//ark_regsisterIncludePath($this->routing['controller_path']);
-		//ark_regsisterIncludePath($this->routing['model_path']);
-		
-		//$data=serialize($this->settings);
-		//file_put_contents(ROOT_DIR.'data/temp/c/1.php', $data);
 		$controller='\\'.strtolower($this->getApplicationName()).'\controllers\\'.ucfirst($this->getControllerName()).'Controller';
-		/*$filename=$this->_controllerPath.strtolower($this->routing['controller']).'.controller.php';
-		
-		if(!@file_exists($filename)){
-			throw new \Exception('[404]未找到指定 Controller。Controller:'. $filename);
-		}
-		include $filename;*/
 		
 		$instance=new $controller($this);
 	}
