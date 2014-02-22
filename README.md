@@ -51,6 +51,6 @@ arkphp-{version}.(rar|7z|zip|etc.)
 
 ArkPHP框架在无特别说明外全部源码均是遵循 [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html) 协议发布。
 
-The ArkPHP framework is released under the terms of the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
+The ArkPHP framework is released under the terms of the following [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
   
   
