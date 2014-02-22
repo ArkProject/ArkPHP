@@ -3,10 +3,14 @@
 ArkPHP 是一个免费开源的，快速、简单的面向对象的轻量级PHP开发框架。
 当前版本 v1.0.1 build 0
 
-##支持
-  PHP v5.3或以上（开发版本，未测试其他版本）
 
-##源码架层次结构
+##支持 Support
+
+PHP v5.3或以上（开发版本，未测试其他版本）.
+
+PHP v5.3 or later(development only,untested other PHP version).
+
+##源码架层次结构 Source Code Layout
 	
 	|	README.md
 	|	.gitignore
@@ -33,14 +37,18 @@ ArkPHP 是一个免费开源的，快速、简单的面向对象的轻量级PHP�
 	|	|		+---images
 	|	|	index.php			//入口文件
 
-##文档
+##文档 Document
 	请访问wiki：https://github.com/ArkProject/ArkPHP/wiki
 
-##发布历史
-
-arkphp-{version}-{encoding}.rar //版本规则
+##发布历史 Release History
+版本必须包文件命名规则：
+arkphp-{version}.(rar|7z|zip|etc.)
 
 暂无发布
 
-##协议
-  ArkPHP遵循 Apache License 2.0 发布。协议参考地址：http://www.apache.org/licenses/LICENSE-2.0.html
+##协议 License
+  
+ArkPHP遵循 Apache License 2.0 发布。协议参考地址：http://www.apache.org/licenses/LICENSE-2.0.html
+  
+  
+  
