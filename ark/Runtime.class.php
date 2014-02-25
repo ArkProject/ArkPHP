@@ -97,13 +97,33 @@ final class Runtime{
 		}
 		
 		//self::$_culture=new \ark\Culture();
-		if ($routing['app'] == 'phpinfo') {
-			if (isset ( $config ['debug'] ) && $config ['debug'] == 'false') {
-				die ( 'Welcome use ARKPHP framework!' );
+		if ($routing['app'] == 'ark') {
+			
+			if ($routing['controller'] == 'phpinfo') {
+				if (isset ( $config ['debug'] ) && $config ['debug'] == 'false') {
+					die ( 'Welcome use ARKPHP framework!' );
+				}
+				$_SERVER ['ARKPHP'] = ARK_VERSION;
+				phpinfo ();
+				
 			}
-			$_SERVER ['ARKPHP'] = ARK_VERSION;
-			phpinfo ();
-			exit ( 0 );
+			else if ($routing['controller'] == 'captcha') {
+				$vc=new \ark\utils\ValidateCode();
+				$code='';
+				$img=$vc->generate($code);
+				//ob_end_flush();
+				header('Content-type:image/png');
+				//die($code);
+				imagepng($img);
+				imagedestroy($img);
+				
+			}
+			else{
+				echo 'Welcome use ARKPHP framework!';
+			}
+			return ;
+			//exit();
+			
 		}
 	
 		//$GLOBALS['__ARK_LANGS']['zh-cn']=include ARK_PATH. 'i18n/langs/zh-cn.php';
