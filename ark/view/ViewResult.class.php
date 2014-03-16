@@ -27,7 +27,7 @@ class ViewResult extends ActionResult{
 				return ;
 			}
 		}
-		throw new \Exception('未找到模板文件.'.$this->_filename);
+		throw new \Exception('Open template file Failed,filename:'.$this->_filename);
 	}
 	
 	public function Execute(){

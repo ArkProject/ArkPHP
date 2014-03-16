@@ -19,7 +19,7 @@ class Application {
 		$routing['model_path']=ark_combine($routing['app_path'], 'models\\');
 		$this->settings = $settings;
 		$this->routing=$routing;
-		$this->init();
+		
 	}
 	
 	/**

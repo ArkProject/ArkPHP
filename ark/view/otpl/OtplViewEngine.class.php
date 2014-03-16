@@ -2,13 +2,22 @@
 namespace ark\view\otpl;
 defined ( 'ARK' ) or exit ( 'access denied' );
 
+/**
+ * 视图引擎
+ * @author jun
+ *
+ */
 class OtplViewEngine extends \ark\view\ViewEngine{
 	
 	public function __construct($app){
 		parent::__construct($app);
 		
 	}
-	
+	/**
+	 * 获取状态存放路径
+	 * @throws \Exception
+	 * @return string
+	 */
 	private function getStatePath(){
 		$path=ark_combine(APP_ROOT,'data/.ark/');
 		if(!is_dir($path)){
@@ -19,6 +28,10 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 		return $path;
 	}
 	
+	/**
+	 * (non-PHPdoc)
+	 * @see \ark\view\ViewEngine::render()
+	 */
 	public function render($view,$content,$isFile=TRUE){
 		if(!$isFile || !(ark_endWith($content, '.tpl') || ark_endWith($content, '.tpl.html') || 
 				ark_endWith($content, '.otpl') || ark_endWith($content, '.otpl.html')
@@ -50,7 +63,10 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 		
 		include ark_combine(APP_ROOT,'data/.ark/tpl/'. $entry_id .'.php');
 	}
-	
+	/**
+	 * 载入状态
+	 * @return Ambigous <multitype:, NULL>
+	 */
 	public function &loadState(){
 		$filename=$this->getStatePath().'state.php';
 		$state=NULL;
@@ -70,7 +86,11 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 		
 		return $state;
 	}
-	
+	/**
+	 * 保存状态
+	 * @param unknown $state
+	 * @throws \Exception
+	 */
 	public function saveState(&$state){
 		if(!$state){
 			throw new \Exception('错误的状态集');
@@ -81,6 +101,10 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 	}
 	
 	private $state;
+	/**
+	 * 载入状态
+	 * @return Ambigous <multitype:, NULL>
+	 */
 	public function &load(){
 		if(!$this->state){
 			$this->state=$this->loadState();
@@ -88,12 +112,21 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 		return $this->state;
 	}
 	
+	/**
+	 * 保存编译状态
+	 * @param unknown $state
+	 */
 	public function saveCompiledState($state){
 		$this->state['compiled_state']['refs'][$state['file']]=$state['uuid'];
 		$this->state['compiled_state']['items'][$state['uuid']]=$state;
 		$this->saveState($this->state);
 	}
 	
+	/**
+	 * 检查模板编译状态
+	 * @param unknown $state
+	 * @throws \Exception
+	 */
 	public function checkChange(&$state){
 		$target=ark_combine(APP_ROOT,'data/temp/c/'.$state['uuid'].'.php');
 		if(!@file_exists($target) || !@file_exists($state['file'])){
@@ -111,6 +144,11 @@ class OtplViewEngine extends \ark\view\ViewEngine{
 		}
 	}
 	
+	/**
+	 * 获取模板编译状态
+	 * @param unknown $filename
+	 * @return multitype:multitype: NULL boolean unknown
+	 */
 	public function &getCompiledState($filename){
 		// 文件编译名称：compiled_id //不包含路径
 		// 文件编译时间：complied_time

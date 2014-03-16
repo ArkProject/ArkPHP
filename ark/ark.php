@@ -12,6 +12,26 @@ define ( 'ARK_VERSION', '1.0.1' );
 define ( 'ARK_PATH', dirname ( __FILE__ ) . '\\' );
 defined ( 'APP_ROOT' ) or define ( 'APP_ROOT', realpath ( dirname ( __FILE__ ) . '/..' ) . '\\' );
 
+/**
+ * @var integer 表示外部向过程内部单向传值。
+ */
+define ( 'ARK_PARAM_IN', 1 );
+
+/**
+ * @var integer 表示过程内部向外部单向传值。
+ */
+define ( 'ARK_PARAM_OUT', 2 );
+
+/**
+ * @var integer 表示调用双方均可传值（双向）。
+ */
+define ( 'ARK_PARAM_INOUT', 3 );
+
+/**
+ * @var bool ARK 是否运行在windows 系统上。
+ */
+define('ARK_ON_WIN', DIRECTORY_SEPARATOR == '\\');
+
 // ================================Ark  标准库========================================//
 
 use ark\Runtime;
@@ -194,6 +214,40 @@ function ark_regsisterIncludePath($path){
 
 // ================================字符串处理函数========================================//
 
+function &ark_removeUTF8Bom(&$str){
+	$bom = pack('H*','EFBBBF');
+	$str = preg_replace("/^$bom/", '', $str);
+	return $str;
+}
+
+/**
+ * 字符串比较
+ * @param string $str
+ * @param string $substr
+ * @param int $pos
+ * @param int $length
+ * @param string $ic
+ * @return boolean
+ */
+function ark_strCompare(&$str,$substr,$pos=0,$length=0,$ic=FALSE){
+	if($length<=0){
+		$length=ark_strlen($str);
+	}
+	$len=ark_strlen($substr);
+	if($len+$pos>$length){
+		return FALSE;
+	}
+	else if($len===1){
+		return $str[$pos]===$substr[0];
+	}
+	for($i=0;$i<$len;$i++){
+		if($str[$pos+$i]!==$substr[$i]){
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
 /**
  * 将一个字符串分割为字符数组返回。
  * @param string $str 要处理的字符串。
@@ -232,55 +286,63 @@ function ark_split($str, $delimiter, $removeEmptyItem = FALSE) {
 	}
 }
 
-function ark_substr($str, $start, $length = NULL){
+function ark_substr(&$str, $start, $length = NULL,$encoding = NULL){
+	
+	//return mb_substr($str, $start,$length,$encoding);
+	
+	
+	$result='';
 	if($length===NULL){
-		return \substr($str,$start);
+		$length=ark_strlen($str,$encoding);
 	}
+	while ($start<$length){
+		$result.=$str[$start];
+		$start++;
+	}
+	return $result;
 	return \substr($str,$start,$length);
 }
 
 function ark_indexOf($str,$substr) {
-	return strpos($str,$substr);
+	return mb_strpos($str,$substr);
 }
 
 function ark_lastIndexOf($str,$substr){
-	return strrpos($str, $substr);
-}
-
-function ark_streq($left, $right, $ignoreCase = TRUE) {
+	return mb_strrpos($str, $substr);
 }
 
 /**
- * gets string length.
+ * 获取一个字符串的长度。
  * 
- * @param string $value        	
- * @param
- *        	boolean 计算之前是否清除两端的空白字符，默认为 TRUE。
- * @param
- *        	boolean 是否使用字符模式，默认为 FALSE.
- * @param
- *        	string 如果使用了字符模式，该参数将确定使用何种编码进行计算。
+ * @param string $str 要计算的字符串。
+ * @param string $encoding 该参数将确定使用何种编码进行计算。
  * @return integer
  */
-function ark_strlen($value, $trimWhitespace = TRUE, $useCharacterMode = FALSE, $encoding = NULL) {
-	if (NULL===$value || gettype($value)!='string') {
-		return 0;
+function ark_strlen($str, $encoding = NULL) {
+	if (NULL===$str || gettype($str)!='string') {
+		throw new Exception('argument $str is required');
 	}
 	
-	if ($trimWhitespace === TRUE) {
-		$value = trim ( $value );
-	}
-	
-	if ($useCharacterMode === FALSE) {
-		
-		preg_match_all ( '/./us', $value, $match );
-		return count ( $match [0] );
-	} else if($encoding!==NULL){
-		return mb_strlen ( $value, $encoding );
+	if($encoding!==NULL){
+		return mb_strlen ( $str, $encoding );
 	}
 	else {
-		return mb_strlen ( $value);
+		return mb_strlen ( $str);
 	}
+	
+	// 	if ($trimWhitespace === TRUE) {
+	// 		$value = trim ( $value );
+	// 	}
+		
+	// 	if ($useCharacterMode === FALSE) {
+	// 		preg_match_all ( '/./us', $value, $match );
+	// 		return count ( $match [0] );
+	// 	} else if($encoding!==NULL){
+	// 		return mb_strlen ( $value, $encoding );
+	// 	}
+	// 	else {
+	// 		return mb_strlen ( $value);
+	// 	}
 }
 
 function ark_startWith($str, $prefix) {
@@ -289,11 +351,77 @@ function ark_startWith($str, $prefix) {
 	}
 	return false;
 }
+
 function ark_endWith($str,$suffix){
-	if (ark_substr($str, ark_strlen($str,FALSE,TRUE) - ark_strlen($suffix,FALSE,TRUE)) === $suffix) {
-		return true;
-	}
-	return false;
+	return ark_strCompare($str, $suffix,ark_strlen($str)-ark_strlen($suffix));
 }
+
+
+
+
+function ark_strlenBC(&$str){
+	$len=0;
+	while (TRUE){
+		if(isset($str[$len])){
+			$len++;
+		}
+		else{
+			break;
+		}
+	}
+	return $len;
+}
+function ark_substrBC(&$str,$start,$length=NULL){
+	$substr='';
+	if(!$length || gettype($length)!='integer'){
+		
+		while (TRUE){
+			if(isset($str[$start])){
+				$substr.=$str[$start];
+				$start++;
+			}
+			else{
+				break;
+			}
+		}
+		return $substr;
+	}
+	$length += $start;
+	while ($start<$length){
+		$substr.=$str[$start];
+		$start++;
+	}
+	return $substr;
+}
+
+/**
+ * 字符串比较
+ * @param string $str
+ * @param string $substr
+ * @param int $pos
+ * @param int $length
+ * @param string $ic
+ * @return boolean
+ */
+function ark_strcomBC(&$str,$substr,$pos=0,$length=NULL){
+	
+	$slen=ark_strlenBC($substr);
+	if(!gettype($length)=='integer'){
+		$length=$slen;
+	}
+	for($i=0;$i<$slen && $i<$length;$i++){
+		if(isset($str[$pos+$i]) && $str[$pos+$i]===$substr[$i]){
+			continue;
+		}
+		else {
+			return FALSE;	
+		}
+	}
+	return TRUE;
+}
+
+
+
+
 
 ?>

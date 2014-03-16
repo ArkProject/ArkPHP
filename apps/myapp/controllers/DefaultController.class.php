@@ -11,30 +11,48 @@ class DefaultController extends Controller{
 		parent::onAction($action);
 		//after
 	}
+	function filter($value){
+		$value=mysql_real_escape_string($value);
+		//echo $value;
+		return $value;
+	}
+	
+	
 	
 	protected function action_index() {
-		//ob_clean();
-		//var_dump(get_included_files(),"<br>");
-		//throw new Exception('gg');
-		//die('fdgd');
+		header('Content-Type:text/html;charset=utf-8');
 		
-		//$u=new Uri('http://usr:pwd@dom.com:8868/index.php?abc=u#f#f');
-		//echo $u->toString();
+		$c=new \ark\view\Compiler();
+		$c->open('E:\repositories\ArkPHP\src\apps\myapp\views\default\test.tpl.html');
+		//$l=new \ark\view\Lexer();
+		$c->compile();
 		
-		//$this->test();
-		//$entry=new Entry();
-		$arr=new \ark\Map(array('k1'=>'v1','k2'=>'v2'));
-		foreach ($arr as $entry){
-			//$entry->key=$key;
-			//$entry->value=$val;->key=>$entry->value
-			echo $entry->value.'=='.'<br>';
-		}
-		//$arr->remove('k1');
-		echo $arr['k1'].'||';
+		return '<br>end结束:'.ARK_ON_WIN;
 		
-		$this->view->hello='hello world';
 		
-		return  $this->view('test');
+		
+		
+		$this->view->hello='ff';
+		return $this->view('test');
+		
+		$db=new \ark\dao\MysqlConnection(array (
+						'provider' => 'ark\dao\mysql\MysqlProvider',
+						'dbhost' => '127.0.0.1',
+						'dbname' => 'test',
+						'username' => 'root',
+						'passwd' => 'rootroot',
+						'encoding' => 'utf-8' 
+				));
+		$db->connect();
+		$cmd=$db->insert('ark_test');
+		$cmd->bind('name', 'ccxx\'');
+		$cmd->bind('age', 18,FALSE);
+		//$cmd->where('id=:id');
+		//$cmd->bind('id', 4);
+		var_dump($cmd->exec());
+		//$hd=$db->connect();
+		
+		return  "<br>over";
 	}
 	
 	function test(){

@@ -1,49 +1,13 @@
-<!DOCTYPE html>
+ssd{{/*}}
+ffgfdgfdg
+{{*/}}
+<!DOCTYXE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>{$hello}</title>
+<title>{{$hello}}</title>
 </head>
 <body>
-今天是：{$now | datetime='Y-m-d'}
-
-<br/>
-
-{literal}
-=========
-{if($val<15)}
-if
-{ elif #y<14}
-elif 1
-{elif (#y<14)}
-elif 2
-{else}
-else
-{/if}
-
-===========
-
-{for:i=0 max=18 step=1}
-for
-{/for}
-
-{for:i max=18 step=1}
-for2{#i}
-{/for}
-
-
-{while('tru\'e')}
-	{@request}
-{/while}
-
-{each:entry items}
-	{:entry.key}={:entry.value}
-{/each}
-
-{loop:item bbb}
-
-{/loop}
-
-{/literal}
+HELLO 世界！
 </body>
 </html>

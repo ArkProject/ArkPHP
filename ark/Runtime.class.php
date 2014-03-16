@@ -156,7 +156,7 @@ final class Runtime{
 		else{
 			self::$_app=new \ark\Application($config,$routing);
 		}
-		//self::$_app->init();
+		self::$_app->init();
 		exit(0);
 	}
 	
@@ -224,6 +224,12 @@ final class Runtime{
 	}
 	
 	public static function handleError($e){
+		
+		$appname='/';
+		try{
+			$appname=ark_app()->getApplicationName();
+		}catch(\Exception $ex) {}
+		
 		$html = '<!DOCTYPE html><html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Server Error</title><style type="text/css">
 body,div,p,ul,li,hr{ margin:0; padding:0; font-size:14px;}
@@ -232,7 +238,7 @@ h3{font-size:18px; font-weight:bold; margin-bottom:5px;margin-top:10px;}
 hr{margin:5px 0; border:none; border-top:1px solid #efefef;}
 p{padding:5px;}
 div{background:#FF9; padding:5px; margin-bottom:20px;}</style></head><body>
-<h3>Server Error</h3><p><b>' . get_class ( $e ) . ':</b> ' . str_replace(ARK_PATH, '~', str_replace(APP_ROOT, '~', $e->getMessage ())) . '</p>
+<h3>Application "'. $appname .'" Error</h3><p><b>' . get_class ( $e ) . ':</b> ' . str_replace(ARK_PATH, '~', str_replace(APP_ROOT, '~', $e->getMessage ())) . '</p>
 <hr /><p><b>Source file：</b>' . str_replace(ARK_PATH, '~', str_replace(APP_ROOT, '~', $e->getFile ())) . ' <b>Line：</b>' . $e->getLine () . '<br><br>
 <b>Stack trace：</b><br></p><div>';
 		$lines=preg_split('/#[0-9]{0,100}\s/', $e->getTraceAsString ());
