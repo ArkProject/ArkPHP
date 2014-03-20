@@ -22,8 +22,8 @@ class DefaultController extends Controller{
 	protected function action_index() {
 		header('Content-Type:text/html;charset=utf-8');
 		
-		$c=new \ark\view\Compiler();
-		$c->open('E:\repositories\ArkPHP\src\apps\myapp\views\default\test.tpl.html');
+		$c=new \ark\view\Compiler();//plain
+		$c->open('E:\repositories\ArkPHP\src\ArkPHP\apps\myapp\views\default\test.tpl.html');
 		//$l=new \ark\view\Lexer();
 		$c->compile();
 		

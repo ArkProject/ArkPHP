@@ -409,6 +409,9 @@ function ark_strcomBC(&$str,$substr,$pos=0,$length=NULL){
 	if(!gettype($length)=='integer'){
 		$length=$slen;
 	}
+	if($length<$slen){
+		return FALSE;
+	}
 	for($i=0;$i<$slen && $i<$length;$i++){
 		if(isset($str[$pos+$i]) && $str[$pos+$i]===$substr[$i]){
 			continue;
